@@ -1,0 +1,49 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go build artifacts
+/bin/
+/pkg/
+/dist/
+
+# Dependency directories (for Go modules)
+vendor/
+go.sum
+go.mod
+
+# IDE and Editor settings
+.vscode/
+.idea/
+*.iml
+
+# Logs and debugging files
+*.log
+*.gz
+*.swp
+*.swo
+*.swn
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Environment variables and credentials
+.env
+.env.local
+.env.*.local
+
+# Coverage files
+coverage.*
+*.cov
+*.cover
+
+# Docker-related
+docker-compose.override.yml
