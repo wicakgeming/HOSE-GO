@@ -75,10 +75,12 @@ func Login(c *gin.Context) {
 
 	// Tambahkan user_id ke token JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id":  float64(user.ID), // Pastikan bertipe float64
+		"user_id":  user.ID,
 		"username": user.Username,
+		"role":     user.Role, // Tambahkan role ke token
 		"exp":      time.Now().Add(time.Hour * 72).Unix(),
 	})
+	
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {

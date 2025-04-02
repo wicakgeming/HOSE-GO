@@ -13,8 +13,10 @@ import (
 type Claims struct {
 	UserID   uint   `json:"user_id"`
 	Username string `json:"username"`
+	Role     string `json:"role"` // Tambahkan role di sini
 	jwt.StandardClaims
 }
+
 
 // ValidateToken - Fungsi untuk memvalidasi JWT
 func ValidateToken(tokenString string) (*Claims, error) {
@@ -59,7 +61,21 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		c.Set("user_id", userID)
 		c.Set("username", claims.Username)
+		c.Set("role", claims.Role)
 		c.Next()
 	}
 }
+
+func AdminOnly() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role, exists := c.Get("role")
+		if !exists || role != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Access forbidden"})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
 

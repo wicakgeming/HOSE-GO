@@ -4,12 +4,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/gin-contrib/cors"
+	database "backend/config"
 	"backend/controllers"
 	"backend/middleware"
 	"backend/models"
-	"backend/config"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 // SetupRouter mengatur semua route untuk aplikasi
@@ -52,9 +53,8 @@ func SetupRouter() *gin.Engine {
 		})
 	})
 
-	// Device Routes
-	protected.POST("/device", controllers.CreateDevice)
-	protected.GET("/devices/:user_id", controllers.GetDevicesByUser)
+	// Device Routes (User)
+	protected.GET("/devices", controllers.GetDevicesByUser)
 	protected.PUT("/device/:device_id", controllers.UpdateDevice)
 
 	// Sensor Routes
@@ -66,7 +66,14 @@ func SetupRouter() *gin.Engine {
 	deviceAPI.Use(middleware.APIKeyMiddleware())
 	deviceAPI.POST("/sensor", controllers.AddSensorData)
 	deviceAPI.GET("/sensor/:device_id", controllers.GetSensorData)
+	deviceAPI.GET("/status", controllers.GetDeviceStatus) // Endpoint untuk melihat status device
 
+	// Admin Routes (Hanya bisa diakses admin)
+	protectedAdmin := r.Group("/admin")
+	protectedAdmin.Use(middleware.AuthMiddleware(), middleware.AdminOnly())
+
+	protectedAdmin.POST("/devices", controllers.CreateDevice) // Admin bisa tambah device
+	protectedAdmin.GET("/devices", controllers.GetAllDevices) // Admin bisa lihat semua device
 
 	return r
 }
