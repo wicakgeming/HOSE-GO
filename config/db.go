@@ -17,9 +17,10 @@ func ConnectDatabase() {
 	// Load environment variables from .env file
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Warning: .env file not found or couldn't be loaded")
 	}
 	
+	// Konfigurasi DSN PostgreSQL
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		os.Getenv("DB_HOST"),
@@ -29,13 +30,19 @@ func ConnectDatabase() {
 		os.Getenv("DB_PORT"),
 	)
 
+	// Koneksi ke database
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		log.Fatal("❌ Failed to connect to database:", err)
 	}
 
-	// Migrasi otomatis
-	db.AutoMigrate(&models.User{})
+	// Auto Migrate untuk semua model
+	err = db.AutoMigrate(&models.User{}, &models.Device{}, &models.SensorData{})
+	if err != nil {
+		log.Fatal("❌ Migration failed:", err)
+	}
+
+	fmt.Println("🚀 Database migration completed successfully!")
 
 	DB = db
 }
