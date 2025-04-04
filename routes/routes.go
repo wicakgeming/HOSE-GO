@@ -72,8 +72,20 @@ func SetupRouter() *gin.Engine {
 	protectedAdmin := r.Group("/admin")
 	protectedAdmin.Use(middleware.AuthMiddleware(), middleware.AdminOnly())
 
-	protectedAdmin.POST("/devices", controllers.CreateDevice) // Admin bisa tambah device
-	protectedAdmin.GET("/devices", controllers.GetAllDevices) // Admin bisa lihat semua device
+	// Routes untuk User Management (Hanya Admin)
+	protectedAdmin.POST("/users", controllers.CreateUser)       // Tambah user
+	protectedAdmin.GET("/users", controllers.GetAllUsers)       // Dapatkan semua user
+	protectedAdmin.PUT("/users/:user_id", controllers.UpdateUser) // Update user
+	protectedAdmin.DELETE("/users/:user_id", controllers.DeleteUser) // Hapus user
 
+	// Routes untuk Device Management (Hanya Admin)
+	protectedAdmin.POST("/devices", controllers.CreateDeviceAdmin)   // Tambah device
+	protectedAdmin.GET("/devices", controllers.GetAllDevicesAdmin)   // Dapatkan semua device
+	protectedAdmin.PUT("/devices/:device_id", controllers.UpdateDeviceAdmin) // Update device
+	protectedAdmin.DELETE("/devices/:device_id", controllers.DeleteDevice) // Hapus device
+
+	// Routes untuk Sensor Data Management (Hanya Admin)
+	protectedAdmin.GET("/sensors/:device_id", controllers.GetSensorData) // Ambil data sensor dari device tertentu
+	protectedAdmin.DELETE("/sensors/:sensor_id", controllers.DeleteSensorData) // Hapus data sensor tertentu
 	return r
 }
