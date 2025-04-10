@@ -53,6 +53,12 @@ func SetupRouter() *gin.Engine {
 		})
 	})
 
+	// User Routes (User)
+	protected.GET("/user", controllers.UserInfoByUser) 
+	protected.PUT("/user", controllers.UpdateUserByUser) 
+	protected.DELETE("/user", controllers.DeleteUserByUser) 
+	protected.PUT("/user/change-password", controllers.ChangePasswordByUser)
+
 	// Device Routes (User)
 	protected.GET("/devices", controllers.GetDevicesByUser)
 	protected.PUT("/device/:device_id", controllers.UpdateDevice)
