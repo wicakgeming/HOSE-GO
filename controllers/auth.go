@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 
-	"backend/config"
+	database "backend/config"
 	"backend/models"
 )
 
@@ -50,7 +50,6 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User registered successfully"})
 }
 
-
 func Login(c *gin.Context) {
 	var input struct {
 		Username string `json:"username"`
@@ -77,17 +76,16 @@ func Login(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":  user.ID,
 		"username": user.Username,
-		"role":     user.Role, // Tambahkan role ke token
+		"email":    user.Email,
+		"role":     user.Role,
 		"exp":      time.Now().Add(time.Hour * 72).Unix(),
 	})
-	
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create token"})
 		return
 	}
-
 
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
 }
@@ -115,7 +113,6 @@ func DeleteUserByUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
-
 
 func UpdateUserByUser(c *gin.Context) {
 	userID := c.MustGet("user_id").(uint)
@@ -201,6 +198,5 @@ func ChangePasswordByUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }
-
 
 // Middleware untuk memverifikasi token JWT

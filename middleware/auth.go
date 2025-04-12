@@ -18,7 +18,6 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-
 // ValidateToken - Fungsi untuk memvalidasi JWT
 func ValidateToken(tokenString string) (*Claims, error) {
 	claims := &Claims{}
@@ -79,5 +78,3 @@ func AdminOnly() gin.HandlerFunc {
 		c.Next()
 	}
 }
-
-
