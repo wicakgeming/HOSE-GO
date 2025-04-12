@@ -45,23 +45,29 @@ func SetupRouter() *gin.Engine {
 	protected.GET("/protected", func(c *gin.Context) {
 		userID, _ := c.Get("user_id")
 		username, _ := c.Get("username")
+		role, _ := c.Get("role")
+		email, _ := c.Get("email")
 
 		c.JSON(http.StatusOK, gin.H{
 			"message":  "You are authorized",
 			"user_id":  userID,
 			"username": username,
+			"role":     role,
+			"email":    email,
 		})
 	})
 
 	// User Routes (User)
-	protected.GET("/user", controllers.UserInfoByUser) 
-	protected.PUT("/user", controllers.UpdateUserByUser) 
-	protected.DELETE("/user", controllers.DeleteUserByUser) 
+	protected.GET("/user", controllers.UserInfoByUser)
+	protected.PUT("/user", controllers.UpdateUserByUser)
+	protected.DELETE("/user", controllers.DeleteUserByUser)
 	protected.PUT("/user/change-password", controllers.ChangePasswordByUser)
 
 	// Device Routes (User)
 	protected.GET("/devices", controllers.GetDevicesByUser)
 	protected.PUT("/device/:device_id", controllers.UpdateDevice)
+	protected.POST("/device", controllers.AddDeviceByUser)
+	protected.DELETE("/device/:device_id", controllers.DeleteDeviceByUser)
 
 	// Sensor Routes
 	protected.POST("/sensor", controllers.AddSensorData)
@@ -79,19 +85,19 @@ func SetupRouter() *gin.Engine {
 	protectedAdmin.Use(middleware.AuthMiddleware(), middleware.AdminOnly())
 
 	// Routes untuk User Management (Hanya Admin)
-	protectedAdmin.POST("/users", controllers.CreateUser)       // Tambah user
-	protectedAdmin.GET("/users", controllers.GetAllUsers)       // Dapatkan semua user
-	protectedAdmin.PUT("/users/:user_id", controllers.UpdateUser) // Update user
+	protectedAdmin.POST("/users", controllers.CreateUser)            // Tambah user
+	protectedAdmin.GET("/users", controllers.GetAllUsers)            // Dapatkan semua user
+	protectedAdmin.PUT("/users/:user_id", controllers.UpdateUser)    // Update user
 	protectedAdmin.DELETE("/users/:user_id", controllers.DeleteUser) // Hapus user
 
 	// Routes untuk Device Management (Hanya Admin)
-	protectedAdmin.POST("/devices", controllers.CreateDeviceAdmin)   // Tambah device
-	protectedAdmin.GET("/devices", controllers.GetAllDevicesAdmin)   // Dapatkan semua device
+	protectedAdmin.POST("/devices", controllers.CreateDeviceAdmin)           // Tambah device
+	protectedAdmin.GET("/devices", controllers.GetAllDevicesAdmin)           // Dapatkan semua device
 	protectedAdmin.PUT("/devices/:device_id", controllers.UpdateDeviceAdmin) // Update device
-	protectedAdmin.DELETE("/devices/:device_id", controllers.DeleteDevice) // Hapus device
+	protectedAdmin.DELETE("/devices/:device_id", controllers.DeleteDevice)   // Hapus device
 
 	// Routes untuk Sensor Data Management (Hanya Admin)
-	protectedAdmin.GET("/sensors/:device_id", controllers.GetSensorData) // Ambil data sensor dari device tertentu
+	protectedAdmin.GET("/sensors/:device_id", controllers.GetSensorData)       // Ambil data sensor dari device tertentu
 	protectedAdmin.DELETE("/sensors/:sensor_id", controllers.DeleteSensorData) // Hapus data sensor tertentu
 	return r
 }

@@ -154,5 +154,64 @@ func GetDeviceStatus(c *gin.Context) {
 	})
 }
 
+func AddDeviceByUser(c *gin.Context) {
+	// Get user_id from token
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var device models.Device
+	if err := c.ShouldBindJSON(&device); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Set device owner and generate API key
+	device.UserID = userID.(uint)
+	device.APIKey = GenerateAPIKey()
+
+	if err := database.DB.Create(&device).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create device"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "Device added successfully",
+		"device":   device,
+		"api_key":  device.APIKey,
+	})
+}
+
+func DeleteDeviceByUser(c *gin.Context) {
+	// Get user_id from token
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Get device ID from URL
+	deviceID, err := strconv.ParseUint(c.Param("device_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid device ID"})
+		return
+	}
+
+	// Find the device and ensure ownership
+	var device models.Device
+	if err := database.DB.Where("id = ? AND user_id = ?", uint(deviceID), userID.(uint)).First(&device).Error; err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not allowed to delete this device"})
+		return
+	}
+
+	if err := database.DB.Delete(&device).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete device"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Device deleted successfully"})
+}
 
 
