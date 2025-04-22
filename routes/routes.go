@@ -58,46 +58,42 @@ func SetupRouter() *gin.Engine {
 	})
 
 	// User Routes (User)
-	protected.GET("/user", controllers.UserInfoByUser)
-	protected.PUT("/user", controllers.UpdateUserByUser)
-	protected.DELETE("/user", controllers.DeleteUserByUser)
-	protected.PUT("/user/change-password", controllers.ChangePasswordByUser)
+	protected.GET("/user", controllers.UserInfoByUser)                       // Dapatkan informasi user
+	protected.PUT("/user", controllers.UpdateUserByUser)                     // Update informasi user
+	protected.DELETE("/user", controllers.DeleteUserByUser)                  // Hapus user
+	protected.PUT("/user/change-password", controllers.ChangePasswordByUser) // Ubah password user
 
 	// Device Routes (User)
-	protected.GET("/devices", controllers.GetDevicesByUser)
-	protected.PUT("/device/:device_id", controllers.UpdateDevice)
-	protected.POST("/device", controllers.AddDeviceByUser)
-	protected.DELETE("/device/:device_id", controllers.DeleteDeviceByUser)
+	protected.GET("/devices", controllers.GetDevicesByUser)                // Dapatkan semua device yang dimiliki user
+	protected.PUT("/device/:device_id", controllers.UpdateDeviceByUser)    // Update device tertentu wajib dimiliki user
+	protected.POST("/device", controllers.AddDeviceByUser)                 // Tambah device baru untuk user
+	protected.DELETE("/device/:device_id", controllers.DeleteDeviceByUser) // Hapus device tertentu yang dimiliki user
+	protected.GET("/sensor/:device_id", controllers.GetSensorDataByUser)   // Dapatkan data sensor dari device tertentu yang dimiliki user
 
-	// Sensor Routes
-	protected.POST("/sensor", controllers.AddSensorData)
-	protected.GET("/sensor/:device_id", controllers.GetSensorData)
-
-	// Device API dengan API Key (untuk ESP32-S3)
+	// =================== Device API Routes (Memerlukan API) ===================
 	deviceAPI := r.Group("/api/device")
-	deviceAPI.Use(middleware.APIKeyMiddleware())
-	deviceAPI.POST("/sensor", controllers.AddSensorData)
-	deviceAPI.GET("/sensor/:device_id", controllers.GetSensorData)
-	deviceAPI.GET("/status", controllers.GetDeviceStatus) // Endpoint untuk melihat status device
+	deviceAPI.Use(middleware.APIKeyMiddleware())               // Middleware untuk memeriksa API Key
+	deviceAPI.POST("/sensor", controllers.AddSensorDataByAPI)  // Endpoint untuk menambahkan data sensor ke device tertentu
+	deviceAPI.GET("/status", controllers.GetDeviceStatusByAPI) // Endpoint untuk melihat status device
 
-	// Admin Routes (Hanya bisa diakses admin)
+	// =================== Admin Routes (Memerlukan Token Admin) ===================
 	protectedAdmin := r.Group("/admin")
 	protectedAdmin.Use(middleware.AuthMiddleware(), middleware.AdminOnly())
 
 	// Routes untuk User Management (Hanya Admin)
-	protectedAdmin.POST("/users", controllers.CreateUser)            // Tambah user
-	protectedAdmin.GET("/users", controllers.GetAllUsers)            // Dapatkan semua user
-	protectedAdmin.PUT("/users/:user_id", controllers.UpdateUser)    // Update user
-	protectedAdmin.DELETE("/users/:user_id", controllers.DeleteUser) // Hapus user
+	protectedAdmin.POST("/users", controllers.CreateUserAdmin)            // Tambah user
+	protectedAdmin.GET("/users", controllers.GetAllUsersAdmin)            // Dapatkan semua user
+	protectedAdmin.PUT("/users/:user_id", controllers.UpdateUserAdmin)    // Update user
+	protectedAdmin.DELETE("/users/:user_id", controllers.DeleteUserAdmin) // Hapus user
 
 	// Routes untuk Device Management (Hanya Admin)
-	protectedAdmin.POST("/devices", controllers.CreateDeviceAdmin)           // Tambah device
-	protectedAdmin.GET("/devices", controllers.GetAllDevicesAdmin)           // Dapatkan semua device
-	protectedAdmin.PUT("/devices/:device_id", controllers.UpdateDeviceAdmin) // Update device
-	protectedAdmin.DELETE("/devices/:device_id", controllers.DeleteDevice)   // Hapus device
+	protectedAdmin.POST("/devices", controllers.CreateDeviceAdmin)              // Tambah device
+	protectedAdmin.GET("/devices", controllers.GetAllDevicesAdmin)              // Dapatkan semua device
+	protectedAdmin.PUT("/devices/:device_id", controllers.UpdateDeviceAdmin)    // Update device
+	protectedAdmin.DELETE("/devices/:device_id", controllers.DeleteDeviceAdmin) // Hapus device
 
 	// Routes untuk Sensor Data Management (Hanya Admin)
-	protectedAdmin.GET("/sensors/:device_id", controllers.GetSensorData)       // Ambil data sensor dari device tertentu
-	protectedAdmin.DELETE("/sensors/:sensor_id", controllers.DeleteSensorData) // Hapus data sensor tertentu
+	protectedAdmin.GET("/sensors/:device_id", controllers.GetSensorDataByAdmin)     // Ambil data sensor dari device tertentu
+	protectedAdmin.DELETE("/sensors/:sensor_id", controllers.DeleteSensorDataAdmin) // Hapus data sensor tertentu
 	return r
 }

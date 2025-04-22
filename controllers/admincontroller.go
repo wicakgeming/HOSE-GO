@@ -1,14 +1,15 @@
 package controllers
 
 import (
+	database "backend/config"
+	"backend/models"
 	"crypto/rand"
 	"encoding/hex"
 	"net/http"
 	"strconv"
-	"golang.org/x/crypto/bcrypt"
-	"backend/models"
-	"backend/config"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +22,7 @@ func GenerateAPIKeyAdmin() string {
 }
 
 // CreateUser - Menambahkan user baru oleh admin
-func CreateUser(c *gin.Context) {
+func CreateUserAdmin(c *gin.Context) {
 	var input struct {
 		Username       string  `json:"username"`
 		Password       string  `json:"password"`
@@ -84,7 +85,7 @@ func CreateUser(c *gin.Context) {
 }
 
 // GetAllUsers - Mendapatkan semua user
-func GetAllUsers(c *gin.Context) {
+func GetAllUsersAdmin(c *gin.Context) {
 	var users []models.User
 	if err := database.DB.Select("id, username, email, role, full_name, date_of_birth, medical_history, address, province, city, postal_code, email_verified, created_at, updated_at").Find(&users).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
@@ -94,7 +95,8 @@ func GetAllUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
-func UpdateUser(c *gin.Context) {
+// UpdateUser - Memperbarui user berdasarkan ID
+func UpdateUserAdmin(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
@@ -184,7 +186,8 @@ func UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully"})
 }
 
-func DeleteUser(c *gin.Context) {
+// DeleteUser - Menghapus user berdasarkan ID
+func DeleteUserAdmin(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("user_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
@@ -198,7 +201,6 @@ func DeleteUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
-
 
 // CreateDevice - Menambahkan device baru untuk user
 func CreateDeviceAdmin(c *gin.Context) {
@@ -227,6 +229,7 @@ func CreateDeviceAdmin(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Device created successfully", "api_key": device.APIKey})
 }
 
+// GetAllDevicesAdmin - Mendapatkan semua device
 func GetAllDevicesAdmin(c *gin.Context) {
 	// Pastikan hanya admin yang bisa akses
 	role, _ := c.Get("role")
@@ -244,6 +247,7 @@ func GetAllDevicesAdmin(c *gin.Context) {
 	c.JSON(http.StatusOK, devices)
 }
 
+// UpdateDeviceAdmin - Memperbarui device berdasarkan ID
 func UpdateDeviceAdmin(c *gin.Context) {
 	// Ambil ID perangkat dari parameter URL dan konversi ke uint
 	deviceID, err := strconv.ParseUint(c.Param("device_id"), 10, 32)
@@ -303,7 +307,7 @@ func UpdateDeviceAdmin(c *gin.Context) {
 }
 
 // DeleteDevice - Menghapus device berdasarkan ID
-func DeleteDevice(c *gin.Context) {
+func DeleteDeviceAdmin(c *gin.Context) {
 	// Ambil ID perangkat dari parameter URL dan konversi ke uint
 	deviceID, err := strconv.Atoi(c.Param("device_id"))
 	if err != nil {
@@ -348,7 +352,7 @@ func DeleteDevice(c *gin.Context) {
 }
 
 // DeleteSensorData - Menghapus data sensor berdasarkan ID
-func DeleteSensorData(c *gin.Context) {
+func DeleteSensorDataAdmin(c *gin.Context) {
 	// Ambil ID sensor dari parameter URL dan konversi ke uint
 	sensorID, err := strconv.Atoi(c.Param("sensor_id"))
 	if err != nil {
@@ -393,4 +397,42 @@ func DeleteSensorData(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Sensor data deleted successfully"})
 }
 
+// GetSensorDataByAdmin - Mengambil data sensor berdasarkan device ID
+func GetSensorDataByAdmin(c *gin.Context) {
+	// Ambil ID perangkat dari parameter URL dan konversi ke uint
+	deviceID, err := strconv.Atoi(c.Param("device_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid device ID"})
+		return
+	}
 
+	// Ambil user ID dan role dari token JWT
+	userID, exists := c.Get("user_id")
+	role, _ := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Konversi user ID ke uint
+	userIDUint := userID.(uint)
+
+	// Jika bukan admin, pastikan data sensor yang diambil adalah milik user yang sedang login
+	if role != "admin" {
+		var device models.Device
+		// Cek apakah perangkat milik user yang sedang login
+		if err := database.DB.Where("id = ? AND user_id = ?", deviceID, userIDUint).First(&device).Error; err != nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You are not allowed to access this device's sensor data"})
+			return
+		}
+	}
+
+	// Ambil data sensor berdasarkan device ID
+	var sensorData []models.SensorData
+	if err := database.DB.Where("device_id = ?", deviceID).Find(&sensorData).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve sensor data"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"sensor_data": sensorData})
+}
