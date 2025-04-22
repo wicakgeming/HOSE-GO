@@ -14,8 +14,7 @@
 
 # Dependency directories (for Go modules)
 vendor/
-go.sum
-go.mod
+
 
 # IDE and Editor settings
 .vscode/
