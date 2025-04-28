@@ -224,38 +224,65 @@ func UpdateUserByUser(c *gin.Context) {
 	userID := c.MustGet("user_id").(uint)
 
 	var input struct {
-		Username       string     `json:"username" binding:"required"`
-		Email          string     `json:"email" binding:"required,email"`
-		FullName       *string    `json:"full_name"`
-		DateOfBirth    *time.Time `json:"date_of_birth"`
-		MedicalHistory *string    `json:"medical_history"`
-		Address        *string    `json:"address"`
-		Province       *string    `json:"province"`
-		City           *string    `json:"city"`
-		PostalCode     *string    `json:"postal_code"`
+		Username       *string `json:"username"`
+		Email          *string `json:"email"`
+		FullName       *string `json:"full_name"`
+		DateOfBirth    *string `json:"date_of_birth"`
+		MedicalHistory *string `json:"medical_history"`
+		Address        *string `json:"address"`
+		Province       *string `json:"province"`
+		City           *string `json:"city"`
+		PostalCode     *string `json:"postal_code"`
 	}
 
+	// Bind input JSON
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input", "detail": err.Error()})
 		return
 	}
 
+	// Ambil data user dari database
 	var user models.User
 	if err := database.DB.First(&user, "id = ?", userID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
-	user.Username = input.Username
-	user.Email = input.Email
-	user.FullName = input.FullName
-	user.DateOfBirth = input.DateOfBirth
-	user.MedicalHistory = input.MedicalHistory
-	user.Address = input.Address
-	user.Province = input.Province
-	user.City = input.City
-	user.PostalCode = input.PostalCode
+	// Update hanya field yang dikirim
+	if input.Username != nil {
+		user.Username = *input.Username
+	}
+	if input.Email != nil {
+		user.Email = *input.Email
+	}
+	if input.FullName != nil {
+		user.FullName = input.FullName
+	}
+	if input.MedicalHistory != nil {
+		user.MedicalHistory = input.MedicalHistory
+	}
+	if input.Address != nil {
+		user.Address = input.Address
+	}
+	if input.Province != nil {
+		user.Province = input.Province
+	}
+	if input.City != nil {
+		user.City = input.City
+	}
+	if input.PostalCode != nil {
+		user.PostalCode = input.PostalCode
+	}
+	if input.DateOfBirth != nil && *input.DateOfBirth != "" {
+		parsedDate, err := time.Parse("2006-01-02", *input.DateOfBirth)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format. Use YYYY-MM-DD"})
+			return
+		}
+		user.DateOfBirth = &parsedDate
+	}
 
+	// Simpan perubahan ke database
 	if err := database.DB.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
 		return
@@ -263,6 +290,7 @@ func UpdateUserByUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully"})
 }
+
 
 // ChangePasswordByUser - Mengubah password user
 func ChangePasswordByUser(c *gin.Context) {

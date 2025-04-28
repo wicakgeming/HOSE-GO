@@ -27,7 +27,7 @@ func SetupRouter() *gin.Engine {
 	// Pengaturan CORS
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000"}, // Sesuaikan dengan frontend
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
@@ -59,7 +59,7 @@ func SetupRouter() *gin.Engine {
 
 	// User Routes (User)
 	protected.GET("/user", controllers.UserInfoByUser)                       // Dapatkan informasi user
-	protected.PUT("/user", controllers.UpdateUserByUser)                     // Update informasi user
+	protected.PATCH("/user", controllers.UpdateUserByUser)                   // Update informasi user
 	protected.DELETE("/user", controllers.DeleteUserByUser)                  // Hapus user
 	protected.PUT("/user/change-password", controllers.ChangePasswordByUser) // Ubah password user
 

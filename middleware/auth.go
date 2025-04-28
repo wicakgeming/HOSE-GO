@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Struct untuk menyimpan payload dari token JWT
+// Struct simpan payload dari token JWT
 type Claims struct {
 	UserID   uint   `json:"user_id"`
 	Username string `json:"username"`
